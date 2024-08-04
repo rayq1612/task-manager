@@ -10,13 +10,13 @@ async function run() {
         await client.connect();
         // Get the database and collection on which to run the operation
         const db = client.db("gettingStarted");
-        const col = db.collection("people");
-        // Create new documents
-        const peopleDocuments = [
-            {
-                "name": { "first": "Alan", "last": "Turing" },
-                "birth": new Date(1912, 5, 23), // May 23, 1912
-                "death": new Date(1954, 5, 7),  // May 7, 1954
+                const col = db.collection("people");
+                // Create new documents
+                const peopleDocuments = [
+                    {
+                        "name": { "first": "Alan", "last": "Turing" },
+                        "birth": new Date(1912, 5, 23), // May 23, 1912
+                        "death": new Date(1954, 5, 7),  // May 7, 1954
                 "contribs": [ "Turing machine", "Turing test", "Turingery" ],
                 "views": 1250000
             },
