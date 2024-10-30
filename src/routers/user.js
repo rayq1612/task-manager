@@ -9,7 +9,7 @@ router.post('/users', async (req, res) => {
   try {
     await user.save()
     const token = await user.generateAuthToken()
-    res.status(201).send(user)
+    res.status(201).send()
   } catch (e) {
     res.status(500).send({error: e})
   }
@@ -19,7 +19,7 @@ router.post('/users/login', async (req, res) => {
   try {
     const user = await User.findByCredentials(req.body.email, req.body.password)
     const token = await user.generateAuthToken()
-    res.send({user, token})
+    res.send({ user, token })
   } catch (e) {
     res.status(400).send({"error": e.message})
   }
@@ -51,21 +51,7 @@ router.get('/users/me', auth, async (req, res) => {
   res.send(req.user)
 })
 
-router.get('/users/:id', async (req, res) => {
-  const _id = req.params.id
-  try {
-    const user = await User.findById(_id)
-    if (user) {
-      res.status(200).send(user)
-    } else {
-      res.status(404).send({error: 'User not found'})
-    }
-  } catch (e) {
-    res.status(500).send({error: e})
-  }
-})
-
-router.patch('/users/:id', async (req, res) => {
+router.patch('/users/me', auth, async (req, res) => {
   const updates = Object.keys(req.body)
   const allowed_updates = ['name', 'email', 'password', 'age']
   const isValidUpdate = updates.every((update) => allowed_updates.includes(update))
@@ -74,33 +60,18 @@ router.patch('/users/:id', async (req, res) => {
     return res.status(400).send({error: 'Invalid updates!'})
   }
 
-  const _id = req.params.id
   try {
-    const user = await User.findById(_id)
-    updates.forEach((update) => user[update] = req.body[update])
-    await user.save()
-    if (user) {
-      res.status(200).send(user)
-    } else {
-      res.status(404).send({error: 'User not found'})
-    }
+    updates.forEach((update) => req.user[update] = req.body[update])
+    await req.user.save()
+    res.send()
   } catch (e) {
     res.status(500).send({error: e})
   }
 })
 
-router.delete('/users/:id', async (req, res) => {
-  const _id = req.params.id
-  try {
-    const deleted_user = await User.findByIdAndDelete(_id)
-    if (deleted_user) {
-      res.status(200).send(deleted_user)
-    } else {
-      res.status(404).send({error: 'User not found'})
-    }
-  } catch (e) {
-    res.status(500).send({error: e})
-  }
+router.delete('/users/me', auth, async (req, res) => {
+    await req.user.deleteOne()
+    res.send(req.user)
 })
 
 module.exports = router

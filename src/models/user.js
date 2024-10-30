@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const validator = require('validator')
 const jwt = require('jsonwebtoken')
+const Task = require('../models/task')
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -47,6 +48,14 @@ const userSchema = new mongoose.Schema({
       required: true,
     }
   }]
+}, {
+  timestamps: true
+})
+
+userSchema.virtual('tasks', {
+  ref: 'Task',
+  localField: '_id',
+  foreignField: 'owner',
 })
 
 //Generate auth token
@@ -56,6 +65,14 @@ userSchema.methods.generateAuthToken = async function () {
   user.tokens = user.tokens.concat({token})
   await user.save()
   return token
+}
+
+userSchema.methods.toJSON = function () {
+  const user = this
+  const userPublicObject = user.toObject()
+  delete userPublicObject.password
+  delete userPublicObject.tokens
+  return userPublicObject
 }
 
 //Logging in
@@ -77,6 +94,12 @@ userSchema.pre('save', async function (next) {
   if (user.isModified('password')) {
     user.password = await bcrypt.hash(user.password, 10)
   }
+  next()
+})
+
+userSchema.pre('deleteOne', { document: true }, async function (next){
+  const user = this
+  await Task.deleteMany({ owner: user._id })
   next()
 })
 
